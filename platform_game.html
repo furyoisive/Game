@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Platformer</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #fff; }
+  canvas { display: block; margin: 0 auto; background: #eee; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const WIDTH = canvas.width;
+const HEIGHT = canvas.height;
+
+const player = { x: WIDTH / 2 - 20, y: HEIGHT - 80, w: 40, h: 60, xvel: 0, yvel: 0 };
+const speed = 5;
+const jumpSpeed = 12;
+const gravity = 0.5;
+let onGround = false;
+
+const keys = {};
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+const platforms = [
+  { x: 0, y: HEIGHT - 20, w: WIDTH, h: 20 },
+  { x: 200, y: HEIGHT - 150, w: 200, h: 20 },
+  { x: 450, y: HEIGHT - 300, w: 150, h: 20 }
+];
+
+function update() {
+  // Horizontal movement
+  if (keys['ArrowLeft']) player.x -= speed;
+  if (keys['ArrowRight']) player.x += speed;
+
+  // Jump
+  if (keys['Space'] && onGround) {
+    player.yvel = -jumpSpeed;
+    onGround = false;
+  }
+
+  // Apply gravity
+  player.yvel += gravity;
+  player.y += player.yvel;
+
+  // Collision detection
+  onGround = false;
+  for (const p of platforms) {
+    if (
+      player.x < p.x + p.w &&
+      player.x + player.w > p.x &&
+      player.y < p.y + p.h &&
+      player.y + player.h > p.y &&
+      player.yvel >= 0
+    ) {
+      player.y = p.y - player.h;
+      player.yvel = 0;
+      onGround = true;
+    }
+  }
+
+  // Keep player in bounds
+  if (player.x < 0) player.x = 0;
+  if (player.x + player.w > WIDTH) player.x = WIDTH - player.w;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillStyle = '#000';
+  for (const p of platforms) ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.fillStyle = '#00f';
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
